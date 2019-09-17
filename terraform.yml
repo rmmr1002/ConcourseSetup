@@ -1,0 +1,31 @@
+---
+#####
+# File name: terraform.yml
+# Synopsis: Configuration file for concourse pipeline 
+#####
+# Resource to connect to Gitlab repo and gain access to .tf files 
+resources:
+- name: concourse-resource
+  type: git
+  source:
+    uri: URL to this repo
+    username: username 
+    password: password
+    branch: master
+jobs:
+# Job applies and destroys teraform through bash script
+  - name: terraform-build
+    public: true
+    plan:
+      - get: concourse-resource
+      - task: terraform-plan
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: hashicorp/terraform, tag: "light"}
+          inputs:
+            - name: concourse-resource
+          run:
+            path: sh
+            args: [concourse-resource/job.sh]
